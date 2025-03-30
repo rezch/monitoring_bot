@@ -1,8 +1,10 @@
-from utils.monitoring import get_top_processes, RESOURCE_TYPE
+import alerts.alert_manager
+
+import asyncio
 
 
 if __name__ == "__main__":
-    result = get_top_processes(5, sort_by=RESOURCE_TYPE.CPU)
+    alert_handle = alerts.alert_manager.AlertManager()
+    alert_handle.load_config()
 
-    for p in result:
-        print(p)
+    asyncio.run(alert_handle.run())

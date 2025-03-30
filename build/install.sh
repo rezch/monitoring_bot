@@ -3,21 +3,25 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BOTENV=$SCRIPT_DIR/"../botenv"
 
-if ! type python3.10; then
-    echo "installing python3.10"
-    sudo apt install -y python3.10
+PY_LIBS=(
+  "psutil"
+  "pyyaml"
+)
+
+if ! type python3.11; then
+    echo "installing python3.11"
+    sudo apt install -y python3.11
+    sudo apt install -y python3.11-pip
+    python3.11 -m ensurepip --user --upgrade
+    python3.11 -m pip install --upgrade pip
+    sudo apt install -y python3.11-venv
 fi
 
 # ------------ INSTALL VENV ------------
 
-if ! type python3-venv; then
-    echo "installing python3-venv"
-    sudo apt install -y python3-venv
-fi
-
 if ! [ -d "$BOTENV" ]; then
     echo "starting installing env"
-    sudo python3 -m venv $BOTENV
+    sudo python3.11 -m venv $BOTENV
     sudo chmod -R 777 $BOTENV
 fi
 
@@ -26,11 +30,8 @@ source $BOTENV/bin/activate
 
 # ------------ INSTALL PY LIBS ------------
 
-if ! type pip3; then
-  echo "pip3 install"
-  sudo apt install -y python3-pip
-fi
-
-if ! pip3 list | grep psutil; then
-  yes | pip3 install psutil
-fi
+for lib in "${PY_LIBS[@]}"; do
+  if ! python3.11 -m pip list | grep $lib; then
+    yes | python3.11 -m pip install $lib
+  fi
+done

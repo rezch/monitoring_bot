@@ -1,0 +1,21 @@
+groups:
+  me: &me
+    - 123
+
+  all:
+    - *me
+
+monitorings:
+  - alert:
+      name: "alert (all)"
+      groups: all
+      cpu-max-usage: 60
+      mem-max-usage: 60
+      check-delay: 0 10 0
+
+  - alert:
+      name: "mem usage alert"
+      groups: me
+      cpu-max-usage: 40
+      mem-max-usage: 12
+      check-delay: 0 0 5
