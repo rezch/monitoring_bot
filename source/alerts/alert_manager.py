@@ -16,7 +16,7 @@ class AlertConfig:
     mem_max_load: int = None    # %
 
     # delay between load checks
-    # format in conf: HH MM SS 
+    # format in conf: HH MM SS
     check_delay: timedelta = timedelta(minutes=5)
 
 
@@ -34,7 +34,7 @@ class Alert:
             self.mute = None
             return True
         return False
-    
+
     def process_check(self) -> bool:
         if datetime.now() > self.last_check + self.config.check_delay:
             return True
