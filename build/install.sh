@@ -6,6 +6,9 @@ BOTENV=$SCRIPT_DIR/"../botenv"
 PY_LIBS=(
   "psutil"
   "pyyaml"
+  "python-decouple"
+  "python-dotenv"
+  "telebot"
 )
 
 if ! type python3.11; then

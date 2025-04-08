@@ -1,10 +1,3 @@
-groups:
-  me: &me
-    - 123
-
-  all:
-    - *me
-
 monitorings:
   - alert:
       name: "alert (all)"
@@ -15,7 +8,7 @@ monitorings:
 
   - alert:
       name: "mem usage alert"
-      groups: me
-      cpu-max-usage: 40
-      mem-max-usage: 12
+      groups: channel
+      cpu-max-usage: 20
+      mem-max-usage: 50
       check-delay: 0 0 5
