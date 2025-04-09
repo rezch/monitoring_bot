@@ -39,7 +39,7 @@ def report(text: str, parse_mode="html") -> List[Message]:
         try:
             message = bot.send_message(TELEGRAM_LOGGER_CHANNEL_ID, text, parse_mode)
             logging.info(f"SEND TO {TELEGRAM_LOGGER_CHANNEL_ID} : {text}")
-            return message
+            return [message]
         except ApiTelegramException as e:
             logging.error(f'ERR: {e}')
 

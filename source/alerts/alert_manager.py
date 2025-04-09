@@ -105,7 +105,8 @@ class ConnectionAlert:
 
         self.last_check = datetime.now()
 
-        if not (raised := connection_check(self.proxy_ip, ConnectionAlert.TIMEOUT)):
+        if raised := connection_check(
+                self.proxy_ip, ConnectionAlert.TIMEOUT) == False:
             self.callback_messages = telegram.report(
                 f"🔴 CRIT: connection failed")
 
