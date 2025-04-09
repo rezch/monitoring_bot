@@ -21,17 +21,23 @@ class RESOURCE_TYPE(Enum):
 
 
 def get_cpu_usage(percpu=False) -> int:
-    ''' return cpu load (opt. per every core)'''
+    """
+    :return: cpu load (opt. per every core)
+    """
     return psutil.cpu_percent(interval=1, percpu=percpu)
 
 
 def get_cpu_avg_load() -> List[int]:
-    ''' return avg cpu load over the last 1, 5 and 15 minutes '''
+    """
+    :return: avg cpu load over the last 1, 5 and 15 minutes
+    """
     return psutil.getloadavg()
 
 
 def get_memory_usage() -> dict:
-    ''' return memory usage: ALL, USED, FREE, USED% '''
+    """
+    :return: memory usage: ALL, USED, FREE, USED%
+    """
     GB_SIZE = 1 << 30
     memory = psutil.virtual_memory()
     return {
@@ -42,7 +48,10 @@ def get_memory_usage() -> dict:
     }
 
 
-def get_memory_usage_raw() -> psutil._pslinux.svmem:
+def get_memory_usage_raw():
+    """
+    :return: system memory usage
+    """
     return psutil.virtual_memory()
 
 
@@ -123,7 +132,11 @@ def _get_top_processes_darwin(count: int, sort_by: RESOURCE_TYPE) -> List[List[s
 
 
 def get_top_processes(count: int = 10, sort_by = RESOURCE_TYPE.CPU) -> List[List[str]]:
-    ''' return top processes by processor usage '''
+    """
+    :param count: count of processes to return
+    :param sort_by: resource to sort by
+    :return: top processes by some resource usage
+    """
 
     if platform.system() == 'Darwin':
         return _get_top_processes_darwin(count, sort_by)
