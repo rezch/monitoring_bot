@@ -15,5 +15,5 @@ if [[ -z "$TOKEN" ]]; then
   echo 'Bot token not found. Please specify token, by "export $TOKEN=<your_token>".'
 else
   echo "Starting bot..."
-  python3.11 source/main.py
+  python3.11 -B source/main.py
 fi

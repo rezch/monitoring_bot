@@ -1,12 +1,12 @@
 from config import PROXY_IP
 import telegram
-from utils.monitoring import get_cpu_usage, get_memory_usage_raw
+from utils.monitors.system import get_cpu_usage, get_memory_usage_raw
+from utils.monitors.network import connection_check
 
 import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime
 from typing import List, Dict
-import subprocess
 import yaml
 
 
@@ -75,8 +75,8 @@ def _prepare_check_delay(check_delay: str) -> timedelta:
 
 
 class ConnectionAlert:
-    CHECH_DELAY = timedelta(minutes=1)
-    CONNECTION_TIMEOUT = 1 # sec
+    CHECH_DELAY = timedelta(seconds=2)
+    TIMEOUT = 1 # sec
 
     def __init__(self):
         self.proxy_ip = PROXY_IP
@@ -99,30 +99,20 @@ class ConnectionAlert:
             return True
         return False
 
-    def connection_check(self) -> bool:
-        p = subprocess.Popen(['ping', '-c', '1', self.proxy_ip])
-        try:
-            p.wait(ConnectionAlert.CONNECTION_TIMEOUT)
-            return True
-        except subprocess.TimeoutExpired:
-            p.kill()
-        return False
-
-    async def call(self, load_info: Dict) -> None:
+    async def call(self, *args) -> None:
         if not self.process_mute() or not self.process_check():
             return
 
         self.last_check = datetime.now()
 
-        if raised := self.connection_check():
-            self.callback_messages.append(telegram.report(
-                f"🔴 CRIT: connection failed"))
+        if not (raised := connection_check(self.proxy_ip, ConnectionAlert.TIMEOUT)):
+            self.callback_messages = telegram.report(
+                f"🔴 CRIT: connection failed")
 
         if self.raised != raised and raised == False:
             telegram.reply_to(
-                self.callback_messages,
-                f"🟢 FIXED: connection restored")
-            self.callback_messages = []
+                f"🟢 FIXED: connection restored",
+                self.callback_messages)
 
         self.raised = raised
 
@@ -131,7 +121,8 @@ class AlertManager:
     SLEEP_TIME = 1 # secs
 
     def __init__(self):
-        self.alerts: List[Alert] = []
+        self.alerts: List[Alert] = [
+            ConnectionAlert()]
 
     def add_alert(self, alert: Alert) -> None:
         self.alerts.append(alert)
@@ -148,6 +139,7 @@ class AlertManager:
                     tg.create_task(
                         alert.call(load_info))
 
+            print(f"CPU: {load_info['cpu_usage']}   MEM: {load_info['mem_usage']}")
             await asyncio.sleep(AlertManager.SLEEP_TIME)
 
     def load_config(self) -> None:
