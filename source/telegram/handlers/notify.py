@@ -30,7 +30,7 @@ def report_to_admins(text: str, parse_mode="html") -> List[Message]:
     return messages
 
 
-def report(text: str, parse_mode="html") -> List[Message]:
+def report(text: str, parse_mode="html", fallback=True) -> List[Message]:
     if bot is None and not TELEGRAM_LOGGER_CHANNEL_ID:
         logging.error("Try report, while tokens or bot isn't set yet.")
         return []
@@ -43,7 +43,9 @@ def report(text: str, parse_mode="html") -> List[Message]:
         except ApiTelegramException as e:
             logging.error(f'ERR: {e}')
 
-    return report_to_admins(text, parse_mode)
+    if fallback:
+        return report_to_admins(text, parse_mode)
+    return []
 
 
 def reply_to(text: str, messages: List[Message]):

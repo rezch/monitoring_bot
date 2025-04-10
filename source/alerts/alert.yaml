@@ -12,3 +12,8 @@ monitorings:
       cpu-max-usage: 20
       mem-max-usage: 50
       check-delay: 0 0 5
+
+  - alert:
+      groups: all
+      connection: proxy
+      check-delay: 0 0 2
