@@ -4,7 +4,7 @@ from telegram import bot
 import logging
 from telebot.apihelper import ApiTelegramException
 from telebot.types import Message
-from typing import List
+from typing import Iterable, List
 
 
 def get_message_id(message: Message):
@@ -48,10 +48,13 @@ def report(text: str, parse_mode="html", fallback=True) -> List[Message]:
     return []
 
 
-def reply_to(text: str, messages: List[Message]):
+def reply_to(text: str, messages: Message | List[Message]):
     if bot is None:
         logging.error("Try report, while tokens or bot isn't set yet.")
         return
+
+    if not isinstance(messages, Iterable):
+        messages = (messages, )
 
     for message in messages:
         try:

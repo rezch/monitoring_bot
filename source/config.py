@@ -16,3 +16,6 @@ PROXY_IP = config(
     "PROXY_IP",
     cast=lambda s: s.strip(),
     default="")
+
+LOG_PATH = config("LOG_PATH", default="/var/log/monitor")
+LOG_CAPACITY = config("LOG_CAPACITY", cast=int, default=1000)

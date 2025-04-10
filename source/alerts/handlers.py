@@ -19,6 +19,17 @@ class AlertGroups(Enum):
     ADMINS = 3
 
 
+def callback_logger_wrapper(get_callback):
+    """ unused """
+    def wrapper(*args, **kwargs):
+        callback = get_callback(*args, **kwargs)
+        def inner_wrapper(*args, **kwargs):
+            print("LOG: ", *args)
+            return callback(*args, **kwargs)
+        return inner_wrapper
+    return wrapper
+
+
 def get_callback(groups: AlertGroups):
     if groups == AlertGroups.ALL:
         return telegram.report
@@ -42,7 +53,7 @@ class AlertHandler:
         return False
 
     def delayed(self) -> bool:
-        if datetime.now() > self.last_check + self.check_delay:
+        if datetime.now() < self.last_check + self.check_delay:
             return True
         self.last_check = datetime.now()
         return False

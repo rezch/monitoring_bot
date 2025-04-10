@@ -1,5 +1,5 @@
 from alerts.handlers import \
-    AlertHandler, AlertGroups, CpuAlertHandler, MemAlertHandler, ConnectionAlertHandler
+    AlertGroups, CpuAlertHandler, MemAlertHandler, ConnectionAlertHandler
 
 from datetime import timedelta
 from typing import Generator
@@ -22,15 +22,16 @@ def prepare_check_delay(check_delay: str) -> timedelta:
     )
 
 
-def validate_max_usage(max_usage: float):
+def validate_max_usage(max_usage: float) -> float:
     if 0 >= max_usage or max_usage > 100:
         raise ValueError(f"Incorrect value for max usage: {max_usage}")
+    return max_usage
 
 
 def load_handler(config) -> Generator:
     name = config['alert'].get('name', None)
     groups = AlertGroups[config['alert'].get('groups', 'ALL').upper()]
-    check_delay = prepare_check_delay(config['alert'].get('chech-delay', '0 10 0'))
+    check_delay = prepare_check_delay(config['alert'].get('check-delay', '0 10 0'))
 
     if 'cpu-max-usage' in config['alert'].keys():
         yield CpuAlertHandler(

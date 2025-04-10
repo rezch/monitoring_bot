@@ -11,7 +11,7 @@ async def main():
     bot_start_polling()
     alert_coro = asyncio.create_task(
         alert_handle.run())
-    
+
     await alert_coro
 
 
