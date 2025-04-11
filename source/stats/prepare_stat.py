@@ -1,4 +1,4 @@
-from alerts.handlers import SystemInfo
+from alerts.structs import SystemInfo
 from config import STAT_IMAGE_PATH
 from stats.log_fetcher import fetch_log
 from stats.plot import make_basic_plot, make_basic_scatter_with_outliers

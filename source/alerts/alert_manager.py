@@ -1,6 +1,6 @@
-import logging.handlers
 from alerts.alert_config import load_config
-from alerts.handlers import AlertHandler, SystemInfo
+from alerts.structs import SystemInfo
+from alerts.handlers import AlertHandler
 from config import PROXY_IP, LOG_PATH, LOG_CAPACITY
 from utils.monitors.system import coro_get_cpu_usage, coro_get_memory_usage_raw
 from utils.monitors.network import connection_check
@@ -8,6 +8,7 @@ from utils.monitors.network import connection_check
 import asyncio
 from datetime import datetime, timedelta
 import logging
+import logging.handlers
 from os import path
 
 

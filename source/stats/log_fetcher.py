@@ -1,4 +1,4 @@
-from alerts.handlers import SystemInfo
+from alerts.structs import SystemInfo
 from config import LOG_PATH
 
 from datetime import datetime, timedelta

@@ -1,22 +1,11 @@
+from alerts.structs import SystemInfo, AlertGroups
 import telegram
+from telegram.handlers.requests import send_stat
 
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 from enum import Enum
 from functools import partial
-
-
-@dataclass
-class SystemInfo:
-    cpu_usage: int      # %
-    mem_usage: int      # %
-    connected: bool     # is there a connection to the proxy
-
-
-class AlertGroups(Enum):
-    ALL = 1
-    CHANNEL = 2
-    ADMINS = 3
 
 
 def callback_logger_wrapper(get_callback):
@@ -71,9 +60,10 @@ class CpuAlertHandler(AlertHandler):
     def check(self, info: SystemInfo) -> bool:
         if self.delayed() or info.cpu_usage < self.max_usage:
             return False
-        self.callback(
+        alert_message = self.callback(
             f"🟡 ALERT: {self.name}\nCPU usage overdraft {info.cpu_usage}\nExpected usage % < {self.max_usage}.",
             parse_mode="markdown")
+        send_stat(alert_message, 'cpu')
         return True
 
 
@@ -89,9 +79,10 @@ class MemAlertHandler(AlertHandler):
     def check(self, info: SystemInfo) -> bool:
         if self.delayed() or info.mem_usage < self.max_usage:
             return False
-        self.callback(
+        alert_message = self.callback(
             f"🟡 ALERT: {self.name}\nMemory usage overdraft {info.mem_usage}\nExpected usage % < {self.max_usage}.",
             parse_mode="markdown")
+        send_stat(alert_message, 'mem')
         return True
 
 
@@ -116,3 +107,4 @@ class ConnectionAlertHandler(AlertHandler):
 
         self.callback_messages = self.callback(
                 f"🔴 CRIT: connection failed\nUnable to connect to the proxy server.")
+        send_stat(self.callback_messages, 'net')

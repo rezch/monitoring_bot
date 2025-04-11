@@ -1,10 +1,11 @@
 from config import TELEGRAM_ADMIN_ID, TELEGRAM_LOGGER_CHANNEL_ID
 from telegram import bot
+from utils.tools import flatten
 
 import logging
 from telebot.apihelper import ApiTelegramException
 from telebot.types import Message
-from typing import Iterable, List
+from typing import List
 
 
 def get_message_id(message: Message):
@@ -53,10 +54,7 @@ def reply_to(text: str, messages: Message | List[Message]):
         logging.error("Try report, while tokens or bot isn't set yet.")
         return
 
-    if not isinstance(messages, Iterable):
-        messages = (messages, )
-
-    for message in messages:
+    for message in flatten(messages):
         try:
             bot.reply_to(message, text)
             logging.info(f"REPLYED TO {get_message_id} : {text}")
