@@ -50,7 +50,7 @@ def read_log(period: timedelta) -> List[str]:
     if readed_lines[0] == '':
         readed_lines = readed_lines[1:]
 
-    return readed_lines
+    return readed_lines[::-1]
 
 
 def log_to_sysinfo(log) -> SystemInfo:
