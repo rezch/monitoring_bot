@@ -9,7 +9,6 @@ from uuid import uuid4
 
 def read_log(period: timedelta) -> List[str]:
     since = str((datetime.now() - period).replace(microsecond=0))
-    since = '2025-04-11 18:01:00'
 
     with open(os.path.join(LOG_PATH, 'system.log'), 'r') as file:
         query = f'alerts.alert_manager {since}'
