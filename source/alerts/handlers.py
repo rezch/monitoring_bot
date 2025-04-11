@@ -72,7 +72,8 @@ class CpuAlertHandler(AlertHandler):
         if self.delayed() or info.cpu_usage < self.max_usage:
             return False
         self.callback(
-            f"🟡 ALERT: {self.name}\nCPU usage overdraft {info.cpu_usage}\nExpected usage % < {self.max_usage}.")
+            f"🟡 ALERT: {self.name}\nCPU usage overdraft {info.cpu_usage}\nExpected usage % < {self.max_usage}.",
+            parse_mode="markdown")
         return True
 
 
@@ -89,7 +90,8 @@ class MemAlertHandler(AlertHandler):
         if self.delayed() or info.mem_usage < self.max_usage:
             return False
         self.callback(
-            f"🟡 ALERT: {self.name}\nMemory usage overdraft {info.mem_usage}\nExpected usage % < {self.max_usage}.")
+            f"🟡 ALERT: {self.name}\nMemory usage overdraft {info.mem_usage}\nExpected usage % < {self.max_usage}.",
+            parse_mode="markdown")
         return True
 
 
