@@ -32,6 +32,7 @@ class CpuStat(Stat):
         y = [cls.pull_data(value) for value in data]
 
         plot = make_basic_plot(x, y)
+        plot.set_ylim([0, 100])
 
         plt.savefig(filename)
 
@@ -49,6 +50,7 @@ class MemStat(Stat):
         y = [cls.pull_data(value) for value in data]
 
         plot = make_basic_plot(x, y)
+        plot.set_ylim([0, 100])
 
         plt.savefig(filename)
 

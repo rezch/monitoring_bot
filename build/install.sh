@@ -14,6 +14,12 @@ PY_LIBS=(
 
 if ! type python3.11; then
     echo "installing python3.11"
+
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt update
+
     sudo apt install -y python3.11
     sudo apt install -y python3.11-pip
     python3.11 -m ensurepip --user --upgrade
