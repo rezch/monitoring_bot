@@ -27,6 +27,14 @@ def get_cpu_usage(percpu=False) -> int:
     return psutil.cpu_percent(interval=1, percpu=percpu)
 
 
+async def coro_get_cpu_usage(percpu=False) -> int:
+    """
+    async version of get_cpu_usage
+    :return: cpu load (opt. per every core)
+    """
+    return get_cpu_usage(percpu=percpu)
+
+
 def get_cpu_avg_load() -> List[int]:
     """
     :return: avg cpu load over the last 1, 5 and 15 minutes
@@ -53,6 +61,14 @@ def get_memory_usage_raw():
     :return: system memory usage
     """
     return psutil.virtual_memory()
+
+
+async def coro_get_memory_usage_raw():
+    """
+    async version of get_memory_usage_raw
+    :return: system memory usage
+    """
+    return get_memory_usage_raw()
 
 
 def _parse_proc_info_linux(raw_info: str) -> Dict[str, str]:

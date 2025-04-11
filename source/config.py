@@ -19,3 +19,5 @@ PROXY_IP = config(
 
 LOG_PATH = config("LOG_PATH", default="/var/log/monitor")
 LOG_CAPACITY = config("LOG_CAPACITY", cast=int, default=1000)
+
+STAT_IMAGE_PATH = config("STAT_IMAGE_PATH", default="/var/log/monitor/stats")

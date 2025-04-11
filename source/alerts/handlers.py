@@ -1,7 +1,7 @@
 import telegram
 
 from dataclasses import dataclass, fields
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from functools import partial
 

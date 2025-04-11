@@ -4,10 +4,11 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BOTENV=$SCRIPT_DIR/"../botenv"
 
 PY_LIBS=(
+  "matplotlib"
   "psutil"
-  "pyyaml"
   "python-decouple"
   "python-dotenv"
+  "pyyaml"
   "telebot"
 )
 

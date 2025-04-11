@@ -8,7 +8,7 @@ from telebot.types import Message
 class IsAdminFilter(SimpleCustomFilter):
     key: str = "is_admin"
 
-    def check(self, message):
+    def check(self, message: Message):
         if isinstance(message, types.CallbackQuery):
             return message.from_user.id in TELEGRAM_ADMIN_ID
-        return message.chat.id in TELEGRAM_ADMIN_ID
+        return message.chat.id == TELEGRAM_LOGGER_CHANNEL_ID or message.chat.id in TELEGRAM_ADMIN_ID

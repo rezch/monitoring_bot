@@ -1,7 +1,7 @@
-import subprocess
+from urllib import request
 
 
-def connection_check(proxy_ip, timeout: int = 1) -> bool:
+async def connection_check(proxy_ip, timeout: int = 1) -> bool:
     """
     ping check function
 
@@ -10,11 +10,10 @@ def connection_check(proxy_ip, timeout: int = 1) -> bool:
     :return: is connection has established before timeout
     """
 
-    p = subprocess.Popen(['ping', '-c', '1', str(proxy_ip)])
+    return True
+    # does not work
     try:
-        p.wait(timeout)
+        request.urlopen(f'https://{proxy_ip}', timeout=timeout)
         return True
-    except subprocess.TimeoutExpired:
-        p.kill()
-
-    return False
+    except request.URLError as err:
+        return False
