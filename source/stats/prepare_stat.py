@@ -68,6 +68,7 @@ class NetStat(Stat):
         y = [cls.pull_data(value) == False for value in data]
 
         plot = make_basic_scatter_with_outliers(x, y, lambda y: y == True)
+        plot.set_ylim([0, 1])
 
         plt.savefig(filename)
 
