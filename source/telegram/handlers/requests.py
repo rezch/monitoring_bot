@@ -34,7 +34,7 @@ def send_stat(reply_messages: Message | List[Message], resource_type: str):
 
     try:
         image_file = prepare_stat_image(
-            timedelta(hours=1),
+            timedelta(hours=3),
             stat_collector)
         
         with open(image_file, 'rb') as f:
