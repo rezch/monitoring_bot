@@ -2,7 +2,6 @@ from enum import Enum
 from typing import List, Dict
 import psutil
 import subprocess
-import platform
 
 
 class RESOURCE_TYPE(Enum):
@@ -10,19 +9,11 @@ class RESOURCE_TYPE(Enum):
     MEM = 1
     TIME = 2
 
-    @staticmethod
-    def to_str(res_type) -> str:
-        result = {
-            __class__.CPU: 'CPU',
-            __class__.MEM: 'MEM',
-            __class__.TIME: 'TIME'
-        }
-        return result[res_type]
-
 
 def get_cpu_usage(percpu=False) -> int:
     """
-    :return: cpu load (opt. per every core)
+    :param percpu: when is True returns usage for each CPU
+    :return: CPU load as a percentage
     """
     return psutil.cpu_percent(interval=1, percpu=percpu)
 
@@ -30,21 +21,22 @@ def get_cpu_usage(percpu=False) -> int:
 async def coro_get_cpu_usage(percpu=False) -> int:
     """
     async version of get_cpu_usage
-    :return: cpu load (opt. per every core)
+    :param percpu: when is True returns usage for each CPU
+    :return: CPU load as a percentage
     """
     return get_cpu_usage(percpu=percpu)
 
 
 def get_cpu_avg_load() -> List[int]:
     """
-    :return: avg cpu load over the last 1, 5 and 15 minutes
+    :return: avg CPU load over the last 1, 5 and 15 minutes
     """
     return psutil.getloadavg()
 
 
 def get_memory_usage() -> dict:
     """
-    :return: memory usage: ALL, USED, FREE, USED%
+    :return: memory usage as { ALL, USED, FREE, USED% }
     """
     GB_SIZE = 1 << 30
     memory = psutil.virtual_memory()
@@ -90,7 +82,11 @@ def _parse_proc_info_linux(raw_info: str) -> Dict[str, str]:
 
 def _parse_proc_info_darwin(raw_info: str) -> Dict[str, str]:
     keys = [
-        'CPU', 'TIME', '#TH', '#WQ', '#PORTS', 'MEM', 'PURG', 'CMPRS', 'PGRP', 'PPID', 'STATE', 'BOOSTS', '%CPU_ME', '%CPU_OTHRS', 'UID', 'FAULTS', 'COW', 'MSGSENT', 'MSGRECV', 'SYSBSD', 'SYSMACH', 'CSW', 'PAGEINS', 'IDLEW', 'POWER', 'INSTRS', 'CYCLES', 'JETPRI', 'USER', '#MREGS', 'RPRVT', 'VPRVT', 'VSIZE', 'KPRVT', 'KSHRD'
+        'CPU', 'TIME', '#TH', '#WQ', '#PORTS', 'MEM', 'PURG', 'CMPRS',
+        'PGRP', 'PPID', 'STATE', 'BOOSTS', '%CPU_ME', '%CPU_OTHRS',
+        'UID', 'FAULTS', 'COW', 'MSGSENT', 'MSGRECV', 'SYSBSD', 'SYSMACH',
+        'CSW', 'PAGEINS', 'IDLEW', 'POWER', 'INSTRS', 'CYCLES', 'JETPRI',
+        'USER', '#MREGS', 'RPRVT', 'VPRVT', 'VSIZE', 'KPRVT', 'KSHRD'
     ]
 
     # extract this params, because command name can have spaces
@@ -124,7 +120,7 @@ def _get_top_processes_linux(count: int, sort_by: RESOURCE_TYPE) -> List[List[st
 
     return sorted(
         [_parse_proc_info_linux(list(filter(None, proc.split(' ')))) for proc in proc_info],
-        key=lambda x: x[RESOURCE_TYPE.to_str(sort_by)],
+        key=lambda x: x[RESOURCE_TYPE[sort_by]],
         reverse=True
         )[:count]
 
@@ -142,18 +138,21 @@ def _get_top_processes_darwin(count: int, sort_by: RESOURCE_TYPE) -> List[List[s
 
     return sorted(
         [_parse_proc_info_darwin(proc) for proc in proc_info],
-        key=lambda x: x[RESOURCE_TYPE.to_str(sort_by)],
+        key=lambda x: x[RESOURCE_TYPE[sort_by]],
         reverse=True
         )[:count]
 
 
-def get_top_processes(count: int = 10, sort_by = RESOURCE_TYPE.CPU) -> List[List[str]]:
+def get_top_processes(count: int = 10, sort_by = str | RESOURCE_TYPE.CPU) -> List[List[str]]:
     """
     :param count: count of processes to return
     :param sort_by: resource to sort by
     :return: top processes by some resource usage
     """
 
-    if platform.system() == 'Darwin':
+    if isinstance(sort_by, str):
+        sort_by = RESOURCE_TYPE[sort_by]
+
+    if psutil.MACOS:
         return _get_top_processes_darwin(count, sort_by)
     return _get_top_processes_linux(count, sort_by)
