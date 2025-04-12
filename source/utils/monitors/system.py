@@ -143,7 +143,7 @@ def _get_top_processes_darwin(count: int, sort_by: RESOURCE_TYPE) -> List[List[s
         )[:count]
 
 
-def get_top_processes(count: int = 10, sort_by = str | RESOURCE_TYPE.CPU) -> List[List[str]]:
+def get_top_processes(count: int = 10, sort_by: str | RESOURCE_TYPE = RESOURCE_TYPE.CPU) -> List[List[str]]:
     """
     :param count: count of processes to return
     :param sort_by: resource to sort by
