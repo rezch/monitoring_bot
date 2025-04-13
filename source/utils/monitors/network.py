@@ -10,7 +10,9 @@ async def connection_check(proxy_ip, timeout: int = 1) -> bool:
     :return: is connection has established before timeout
     """
 
-    p = subprocess.Popen(['ping', '-c', '1', str(proxy_ip)])
+    p = subprocess.Popen(
+        ['ping', '-c', '1', str(proxy_ip)],
+        stdout=subprocess.DEVNULL)
     try:
         p.wait(timeout)
         return True
