@@ -25,7 +25,7 @@ class CpuStat(Stat):
     @staticmethod
     def pull_data(sys_info: SystemInfo) -> float:
         return sys_info.cpu_usage
-    
+
     @classmethod
     def make_plot(cls, data: List[SystemInfo], filename: str):
         x = list(range(len(data)))
@@ -43,7 +43,7 @@ class MemStat(Stat):
     @staticmethod
     def pull_data(sys_info: SystemInfo) -> float:
         return sys_info.mem_usage
-    
+
     @classmethod
     def make_plot(cls, data: List[SystemInfo], filename: str):
         x = list(range(len(data)))
@@ -61,14 +61,14 @@ class NetStat(Stat):
     @staticmethod
     def pull_data(sys_info: SystemInfo) -> bool:
         return sys_info.connected
-    
+
     @classmethod
     def make_plot(cls, data: List[SystemInfo], filename: str):
         x = list(range(len(data)))
         y = [cls.pull_data(value) == False for value in data]
 
         plot = make_basic_scatter_with_outliers(x, y, lambda y: y == True)
-        plot.set_ylim([0, 1])
+        plot.set_ylim([0, 1.5])
 
         plt.savefig(filename)
 
