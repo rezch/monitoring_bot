@@ -1,10 +1,7 @@
 from alerts.structs import SystemInfo, AlertGroups
-import telegram
-from telegram.handlers.requests import send_stat
+from telegram import *
 
-from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
-from enum import Enum
 from functools import partial
 
 
@@ -21,11 +18,11 @@ def callback_logger_wrapper(get_callback):
 
 def get_callback(groups: AlertGroups):
     if groups == AlertGroups.ALL:
-        return telegram.report
+        return report
     if groups == AlertGroups.CHANNEL:
-        return partial(telegram.report, fallback=False)
+        return partial(report, fallback=False)
     if groups == AlertGroups.ADMINS:
-        return telegram.report_to_admins
+        return report_to_admins
 
 
 class AlertHandler:
@@ -38,7 +35,7 @@ class AlertHandler:
         self.check_delay = chech_delay
         self.last_check = datetime.now() - timedelta(minutes=100)
 
-    def check(self, info: SystemInfo) -> bool:
+    async def check(self, info: SystemInfo) -> bool:
         return False
 
     def delayed(self) -> bool:
@@ -57,7 +54,7 @@ class CpuAlertHandler(AlertHandler):
         super().__init__(name, groups, chech_delay)
         self.max_usage = max_usage
 
-    def check(self, info: SystemInfo) -> bool:
+    async def check(self, info: SystemInfo) -> bool:
         if self.delayed() or info.cpu_usage < self.max_usage:
             return False
         alert_message = self.callback(
@@ -76,7 +73,7 @@ class MemAlertHandler(AlertHandler):
         super().__init__(name, groups, chech_delay)
         self.max_usage = max_usage
 
-    def check(self, info: SystemInfo) -> bool:
+    async def check(self, info: SystemInfo) -> bool:
         if self.delayed() or info.mem_usage < self.max_usage:
             return False
         alert_message = self.callback(
@@ -95,10 +92,10 @@ class ConnectionAlertHandler(AlertHandler):
         self.raised = False
         self.callback_messages = []
 
-    def check(self, info: SystemInfo) -> None:
+    async def check(self, info: SystemInfo) -> None:
         if self.raised and info.connected:
             self.raised = False
-            telegram.reply_to(
+            reply_to(
                 f"🟢 FIXED: connection restored",
                 self.callback_messages)
 

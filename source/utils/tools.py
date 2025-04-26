@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Generator
+from typing import Any, Generator
 
 
 def is_pure_iterable(value):
@@ -16,3 +16,9 @@ def flatten(data: list) -> Generator:
             yield from flatten(element)
         else:
             yield element
+
+
+def optional_none(nullable_value: Any):
+    if nullable_value is None:
+        return type(nullable_value)() # base value of type nullable_value
+    return nullable_value

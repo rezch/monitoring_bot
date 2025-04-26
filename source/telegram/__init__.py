@@ -1,4 +1,5 @@
 from config import TELEGRAM_API_TOKEN
+from utils.coro import TaskQueue
 from . import verify
 
 import importlib.util
@@ -7,17 +8,29 @@ from threading import Thread
 from telebot import TeleBot
 
 
-HANDLERS = [
-    "notify",
-    "requests"]
-
 bot = None
+messages_queue = TaskQueue(
+    delay=3, # min delay for telegram api
+    sleep_delay=0.1)
+
 
 if TELEGRAM_API_TOKEN:
     bot = TeleBot(TELEGRAM_API_TOKEN)
 
 
+# def quite_poll():
+#     while True:
+#         try:
+#             bot.infinity_polling()
+#         except Exception as e:
+#             print(f'Polling err: {e}')
+
+
 def bot_start_polling():
+    HANDLERS = [
+        "notify",
+        "requests"]
+
     if bot:
         bot.add_custom_filter(verify.IsAdminFilter())
 
@@ -29,6 +42,8 @@ def bot_start_polling():
         thread = Thread(target=bot.infinity_polling, daemon=True)
         thread.start()
 
+        return thread
+
 
 from .handlers.notify import (
     report,
@@ -36,9 +51,15 @@ from .handlers.notify import (
     reply_to,
 )
 
+from .handlers.requests import (
+    send_stat,
+)
+
 __all__ = [
-    "bot",
+    "bot_start_polling",
+    "messages_queue",
     "report",
     "report_to_admins",
     "reply_to",
+    "send_stat",
 ]

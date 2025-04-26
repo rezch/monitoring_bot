@@ -72,11 +72,12 @@ def convert_logs_to_info(logs: List[str]) -> List[SystemInfo]:
 
     for info in logs:
         info = info.split('INFO')
+
         if len(info) < 2:
             continue
 
         info = log_to_sysinfo(info[1].strip())
-        
+
         if info is not None:
             result.append(info)
 

@@ -9,8 +9,8 @@ monitorings:
   - alert:
       name: "mem usage alert"
       groups: channel
-      cpu-max-usage: 20
-      mem-max-usage: 50
+      cpu-max-usage: 1
+      mem-max-usage: 1
       check-delay: 0 0 5
 
   - alert:

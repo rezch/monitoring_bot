@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BOTENV=$SCRIPT_DIR/"../botenv"
-
-PY_LIBS=(
-  "matplotlib"
-  "psutil"
-  "python-decouple"
-  "python-dotenv"
-  "pyyaml"
-  "telebot"
-)
+BOTENV="$SCRIPT_DIR"/../botenv
 
 if ! type python3.11; then
     echo "installing python3.11"
@@ -36,12 +27,8 @@ if ! [ -d "$BOTENV" ]; then
 fi
 
 echo "source env"
-source $BOTENV/bin/activate
+source "$BOTENV"/bin/activate
 
 # ------------ INSTALL PY LIBS ------------
 
-for lib in "${PY_LIBS[@]}"; do
-  if ! python3.11 -m pip list | grep $lib; then
-    yes | python3.11 -m pip install $lib
-  fi
-done
+pip install -r "$SCRIPT_DIR"/requirements.txt
