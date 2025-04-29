@@ -18,7 +18,7 @@ def flatten(data: list) -> Generator:
             yield element
 
 
-def optional_none(nullable_value: Any):
+def optional_none(value_type, nullable_value: Any):
     if nullable_value is None:
-        return type(nullable_value)() # base value of type nullable_value
+        return value_type() # base value of type nullable_value
     return nullable_value

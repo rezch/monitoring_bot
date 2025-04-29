@@ -1,3 +1,5 @@
+from utils.tools import is_pure_iterable
+
 import asyncio
 from collections.abc import Callable
 from typing import Coroutine, Dict, List
@@ -32,51 +34,66 @@ async def task_pool(packaged_tasks: Dict[Callable, List]):
     return [await promise for promise in promises]
 
 
-class QueueException(Exception):
-    def __init__(self, message: str = None):
-        self._message = optional_none(message)
-
-    def __str__(self):
-        return f"QuiteTaskQueue exception: {self._message}"
-
-
 class Promise:
     def __init__(self):
         self.ready = False
         self.value = None
-        self.cv = asyncio.Condition()
+        self.event = asyncio.Event()
 
     def put(self, value):
+        print("PUT: ", value)
         self.value = value
-        self.cv.notify_all()
+        self.event.set()
 
     async def get(self):
-        async with self.cv:
-            await self.cv.wait()
+        await self.event.wait()
         return self.value
 
 
-async def fetch_message(value):
+async def fetch_promise(promise, direct_order=False):
     """
     fetching value from promise, with waiting
     if given non promise value, just returns it
+    if promise is iterable, iterates through it, and yields fetched values
     :param value: promise to value, or value
-    :return: value (non promise)
+    :param direct_order: default=False, if True, yields values from iterable promise in direct order
+    :return: fetched from promise value
     """
-    if isinstance(value, Promise):
-        return await value.get()
-    return value
+    if isinstance(promise, Promise):
+        return await promise.get()
+    if not is_pure_iterable(promise):
+        return promise
+    if direct_order:
+        for value in promise:
+            yield await fetch_promise(value)
+    else:
+        async for value in promise:
+            yield await fetch_promise(value)
 
 
 class TaskQueue:
+    # TODO: add queue max size
     RUNNING = 0
     WAIT_TO_DIE = 1
     FORCE_DIE = 2
 
+    class PackagedTask:
+        def __init__(self, call, args, kwargs):
+            self.call = call
+            self.args = args
+            self.kwargs = kwargs
+            self.promise = Promise()
+
+    class QueueException(Exception):
+        def __init__(self, message: str = None):
+            self._message = optional_none(str, message)
+
+        def __str__(self):
+            return f"QuiteTaskQueue exception: {self._message}"
+
     def __init__(self, delay: float = 1, sleep_delay: float = 1):
-        self.call_queue = []
-        self.ctx_queue = []
-        self.promise_queue = []
+        self.task_queue = []
+        self.queue_lock = asyncio.Lock()
         self.delay = delay
         self.sleep_delay = sleep_delay
         self.state = TaskQueue.RUNNING
@@ -87,15 +104,13 @@ class TaskQueue:
         if self.run_loop:
             await self.run_loop
 
-    def post(self, call, *args, **kwargs) -> Promise:
+    async def post(self, call, *args, **kwargs) -> Promise:
         if self.state != TaskQueue.RUNNING:
-            raise QueueException("attempt to post a call in the stopped queue.")
-        print("POST:", call.__name__, args, kwargs)
-        self.call_queue.append(call)
-        self.ctx_queue.append((args, kwargs))
-        promise = Promise()
-        self.promise_queue.append(promise)
-        return promise
+            raise TaskQueue.QueueException("attempt to post a call in the stopped queue.")
+        async with self.queue_lock:
+            self.task_queue.append(
+                TaskQueue.PackagedTask(call, args, kwargs))
+        return self.task_queue[-1].promise
 
     def stop(self):
         self.state = TaskQueue.WAIT_TO_DIE
@@ -104,25 +119,29 @@ class TaskQueue:
         self.state = TaskQueue.FORCE_DIE
 
     def run(self) -> Coroutine:
-        self.run_loop = self._run()
+        self.run_loop = asyncio.gather(self._run())
         return self.run_loop
+
+    async def _check_queue(self):
+        if self.task_queue:
+            return True
+        if self.state == TaskQueue.WAIT_TO_DIE:
+            # task queue is empty, so TaskQueue can stop now
+            self.state == TaskQueue.FORCE_DIE
+            return False
+        await asyncio.sleep(self.sleep_delay)
+        return True
 
     async def _run(self):
         while self.state != TaskQueue.FORCE_DIE:
-            if not self.call_queue:
-                if self.state == TaskQueue.WAIT_TO_DIE:
+            async with self.queue_lock:
+                if not await self._check_queue():
                     return
-                await asyncio.sleep(self.sleep_delay)
-                continue
+                task = self.task_queue.pop(0)
 
-            print("FETCH TASK")
-            call, ctx, promise = [
-                await x for x in map(
-                    fetch_message,
-                    (self.call_queue.pop(0),
-                    *self.ctx_queue.pop(0),
-                    self.promise_queue.pop(0)))]
-            print(call, ctx, promise)
+            if asyncio.iscoroutinefunction(task.call):
+                task.promise.put(await task.call(*task.args, **task.kwargs))
+            else:
+                task.promise.put(task.call(*task.args, **task.kwargs))
 
-            promise.put(await call(*ctx))
             await asyncio.sleep(self.delay)

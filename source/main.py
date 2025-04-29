@@ -4,7 +4,6 @@ from utils.coro import quite_task_pool
 
 import asyncio
 
-
 async def main():
     alert_handle = AlertManager()
     alert_handle.load_config()

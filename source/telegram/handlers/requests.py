@@ -1,7 +1,5 @@
 from stats.prepare_stat import CpuStat, MemStat, NetStat, prepare_stat_image
 from telegram import bot, reply_to
-from telegram.coro_utils import fetch_message, post_wrapper
-from telegram.handlers.notify import force_reply_to
 from utils.tools import flatten
 
 from datetime import timedelta
@@ -19,7 +17,7 @@ def admin_handler_wrapper(commands: List[str]):
     return wrapper
 
 
-def uncoro_send_stat(reply_messages: Message | List[Message], resource_type: str):
+def send_stat(reply_messages: Message | List[Message], resource_type: str):
     stat_collector = None
     if resource_type == 'cpu':
         stat_collector = CpuStat
@@ -51,14 +49,9 @@ def uncoro_send_stat(reply_messages: Message | List[Message], resource_type: str
         return callback
     except ZeroDivisionError as e:
         logging.error(f"ERR: {e}")
-        return reply_to(
+        return force_reply_to(
             "Sorry, something went wrong...",
             reply_messages)
-
-
-@post_wrapper
-async def send_stat(reply_messages: Message | List[Message], resource_type: str):
-    return send_stat(fetch_message(reply_messages), resource_type)
 
 
 @admin_handler_wrapper(commands=['stat'])
@@ -66,10 +59,10 @@ def stat_command(message):
     resource_type = message.text.split('/stat ', 1)
 
     if len(resource_type) == 1:
-        return force_reply_to(
+        return reply_to(
             "Please, specify the resource type for collecting statistics.",
             message)
 
     resource_type = resource_type[1].strip()
 
-    return uncoro_send_stat(message, resource_type)
+    return send_stat(message, resource_type)

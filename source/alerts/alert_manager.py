@@ -17,8 +17,7 @@ async def prepare_sys_info() -> SystemInfo:
     info = await task_pool({
         coro_get_cpu_usage: [],
         coro_get_memory_usage_raw: [],
-        connection_check: ["0.0.0.0"],
-    })
+        connection_check: ["0.0.0.0"]})
 
     return SystemInfo(
         cpu_usage=info[0],

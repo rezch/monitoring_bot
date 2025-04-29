@@ -19,6 +19,7 @@ if TELEGRAM_API_TOKEN:
 
 
 # def quite_poll():
+#     TODO: try/except wrapper for bot.infinity_polling()
 #     while True:
 #         try:
 #             bot.infinity_polling()
@@ -27,22 +28,25 @@ if TELEGRAM_API_TOKEN:
 
 
 def bot_start_polling():
-    HANDLERS = [
+    HANDLERS = (
         "notify",
-        "requests"]
+        "requests")
 
-    if bot:
-        bot.add_custom_filter(verify.IsAdminFilter())
+    if bot is None:
+        print("Bot is not running")
+        return
 
-        handler_dir = dirname(__file__) + "/handlers/"
-        for name in HANDLERS:
-            spec = importlib.util.spec_from_file_location(name, f"{handler_dir}{name}.py")
-            spec.loader.exec_module(importlib.util.module_from_spec(spec))
+    bot.add_custom_filter(verify.IsAdminFilter())
 
-        thread = Thread(target=bot.infinity_polling, daemon=True)
-        thread.start()
+    handler_dir = dirname(__file__) + "/handlers/"
+    for name in HANDLERS:
+        spec = importlib.util.spec_from_file_location(name, f"{handler_dir}{name}.py")
+        spec.loader.exec_module(importlib.util.module_from_spec(spec))
 
-        return thread
+    thread = Thread(target=bot.infinity_polling, daemon=True)
+    thread.start()
+
+    return thread
 
 
 from .handlers.notify import (
@@ -51,9 +55,11 @@ from .handlers.notify import (
     reply_to,
 )
 
+
 from .handlers.requests import (
     send_stat,
 )
+
 
 __all__ = [
     "bot_start_polling",

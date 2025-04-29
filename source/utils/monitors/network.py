@@ -12,12 +12,6 @@ async def connection_check(proxy_ip, timeout: int = 1) -> bool:
     """
 
     command = f'ping -c 1 {proxy_ip}'
-    global x
-
-    if x == 1:
-        return False
-    
-    x = x + 1
 
     p = subprocess.Popen(
         command.split(' '),
