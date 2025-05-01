@@ -1,31 +1,8 @@
-from alerts.structs import SystemInfo, AlertGroups
-import telegram
-from telegram.handlers.requests import send_stat
+from telegram import *
+from .structs import SystemInfo, AlertGroups
+from .utils import callback_post_wrapper, coro_send_stat, get_callback
 
-from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
-from enum import Enum
-from functools import partial
-
-
-def callback_logger_wrapper(get_callback):
-    """ unused """
-    def wrapper(*args, **kwargs):
-        callback = get_callback(*args, **kwargs)
-        def inner_wrapper(*args, **kwargs):
-            print("LOG: ", *args)
-            return callback(*args, **kwargs)
-        return inner_wrapper
-    return wrapper
-
-
-def get_callback(groups: AlertGroups):
-    if groups == AlertGroups.ALL:
-        return telegram.report
-    if groups == AlertGroups.CHANNEL:
-        return partial(telegram.report, fallback=False)
-    if groups == AlertGroups.ADMINS:
-        return telegram.report_to_admins
 
 
 class AlertHandler:
@@ -38,7 +15,7 @@ class AlertHandler:
         self.check_delay = chech_delay
         self.last_check = datetime.now() - timedelta(minutes=100)
 
-    def check(self, info: SystemInfo) -> bool:
+    async def check(self, info: SystemInfo) -> bool:
         return False
 
     def delayed(self) -> bool:
@@ -57,13 +34,16 @@ class CpuAlertHandler(AlertHandler):
         super().__init__(name, groups, chech_delay)
         self.max_usage = max_usage
 
-    def check(self, info: SystemInfo) -> bool:
+    async def check(self, info: SystemInfo) -> bool:
         if self.delayed() or info.cpu_usage < self.max_usage:
             return False
-        alert_message = self.callback(
+
+        alert_message = await self.callback(
             f"🟡 ALERT: {self.name}\nCPU usage overdraft {info.cpu_usage}\nExpected usage % < {self.max_usage}.",
-            parse_mode="markdown")
-        send_stat(alert_message, 'cpu')
+            "markdown" # parse_mode
+        )
+
+        await coro_send_stat(alert_message, 'cpu')
         return True
 
 
@@ -76,13 +56,16 @@ class MemAlertHandler(AlertHandler):
         super().__init__(name, groups, chech_delay)
         self.max_usage = max_usage
 
-    def check(self, info: SystemInfo) -> bool:
+    async def check(self, info: SystemInfo) -> bool:
         if self.delayed() or info.mem_usage < self.max_usage:
             return False
-        alert_message = self.callback(
+
+        alert_message = await self.callback(
             f"🟡 ALERT: {self.name}\nMemory usage overdraft {info.mem_usage}\nExpected usage % < {self.max_usage}.",
-            parse_mode="markdown")
-        send_stat(alert_message, 'mem')
+            "markdown" # parse_mode
+        )
+
+        await coro_send_stat(alert_message, 'mem')
         return True
 
 
@@ -94,17 +77,19 @@ class ConnectionAlertHandler(AlertHandler):
         super().__init__(name, groups, chech_delay)
         self.raised = False
         self.callback_messages = []
+        self.reply_to = callback_post_wrapper(reply_to)
 
-    def check(self, info: SystemInfo) -> None:
+    async def check(self, info: SystemInfo) -> None:
         if self.raised and info.connected:
             self.raised = False
-            telegram.reply_to(
+            await self.reply_to(
                 f"🟢 FIXED: connection restored",
                 self.callback_messages)
 
         if self.delayed() or info.connected:
             return False
 
-        self.callback_messages = self.callback(
+        self.callback_messages = await self.callback(
                 f"🔴 CRIT: connection failed\nUnable to connect to the proxy server.")
-        send_stat(self.callback_messages, 'net')
+        await coro_send_stat(self.callback_messages, 'net')
+        return False

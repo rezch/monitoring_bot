@@ -1,6 +1,5 @@
 from stats.prepare_stat import CpuStat, MemStat, NetStat, prepare_stat_image
-from telegram import bot
-from telegram.handlers.notify import reply_to
+from telegram import bot, reply_to
 from utils.tools import flatten
 
 from datetime import timedelta
@@ -36,7 +35,7 @@ def send_stat(reply_messages: Message | List[Message], resource_type: str):
         image_file = prepare_stat_image(
             timedelta(hours=3),
             stat_collector)
-        
+
         with open(image_file, 'rb') as f:
             for message in flatten(reply_messages):
                 callback = bot.send_photo(
@@ -48,7 +47,7 @@ def send_stat(reply_messages: Message | List[Message], resource_type: str):
         os.remove(image_file)
 
         return callback
-    except Exception as e:
+    except ZeroDivisionError as e:
         logging.error(f"ERR: {e}")
         return reply_to(
             "Sorry, something went wrong...",

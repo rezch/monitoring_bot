@@ -1,19 +1,9 @@
 #!/usr/bin/env bash
-
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BOTENV="$SCRIPT_DIR"/"../botenv"
+BOTENV="$SCRIPT_DIR"/../botenv
 
-PY_LIBS=(
-  "matplotlib"
-  "psutil"
-  "python-decouple"
-  "python-dotenv"
-  "pyyaml"
-  "telebot"
-)
-
-if ! [[ type python3.11]]; then
-    echo "installing python3.11"
+if ! type python3.11; then
+    echo "Installing python3.11..."
 
     sudo apt update && sudo apt upgrade -y
     sudo apt install -y software-properties-common
@@ -30,7 +20,7 @@ fi
 # ------------ INSTALL VENV ------------
 
 if ! [[ -d "$BOTENV" ]]; then
-    echo "starting installing env"
+    echo "Starting installing env..."
     sudo python3.11 -m venv $BOTENV
     sudo chmod -R 777 $BOTENV
 fi
@@ -40,8 +30,4 @@ source "$BOTENV"/bin/activate
 
 # ------------ INSTALL PY LIBS ------------
 
-for lib in "${PY_LIBS[@]}"; do
-  if ! [[ python3.11 -m pip list | grep "$lib" ]]; then
-    yes | python3.11 -m pip install "$lib"
-  fi
-done
+pip install -r "$SCRIPT_DIR"/requirements.txt

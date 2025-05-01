@@ -83,8 +83,6 @@ def prepare_stat_image(period: timedelta, resource: Stat) -> str:
     """
     filename = f'{STAT_IMAGE_PATH}/{str(uuid4())}.png'
 
-    # TODO: check existans of save dir
-
     sys_info = fetch_log(period)
     resource.make_plot(sys_info, filename)
 
