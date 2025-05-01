@@ -1,6 +1,5 @@
 import subprocess
 
-x = 0
 
 async def connection_check(proxy_ip, timeout: int = 1) -> bool:
     """
