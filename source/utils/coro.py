@@ -19,7 +19,6 @@ async def task_pool_single_args(tasks: Callable, *args, **kwargs) -> List:
                 task(*args, **kwargs))
             for task in tasks
         ]
-
     return [await promise for promise in promises]
 
 
@@ -30,7 +29,6 @@ async def task_pool(packaged_tasks: Dict[Callable, List]):
                 task(*args))
             for task, args in packaged_tasks.items()
         ]
-
     return [await promise for promise in promises]
 
 
@@ -60,29 +58,37 @@ async def fetch_promise(promise, direct_order=False):
     :return: fetched from promise value
     """
     if isinstance(promise, Promise):
-        return await promise.get()
+        yield await promise.get()
+        return
     if not is_pure_iterable(promise):
-        return promise
+        yield promise
+        return
     if direct_order:
         for value in promise:
-            yield await fetch_promise(value)
+            async for result in fetch_promise(value, True):
+                yield result
     else:
         async for value in promise:
-            yield await fetch_promise(value)
+            async for result in fetch_promise(value):
+                yield result
 
 
 class TaskQueue:
-    # TODO: add queue max size
     RUNNING = 0
     WAIT_TO_DIE = 1
     FORCE_DIE = 2
 
     class PackagedTask:
-        def __init__(self, call, args, kwargs):
-            self.call = call
-            self.args = args
-            self.kwargs = kwargs
+        def __init__(self, call, *args, **kwargs):
+            self._call = call
+            self._args = args
+            self._kwargs = kwargs
             self.promise = Promise()
+
+        async def call(self):
+            if asyncio.iscoroutinefunction(self._call):
+                return await self._call(*self._args, **self._kwargs)
+            return self._call(*self._args, **self._kwargs)
 
     class QueueException(Exception):
         def __init__(self, message: str = None):
@@ -91,25 +97,33 @@ class TaskQueue:
         def __str__(self):
             return f"QuiteTaskQueue exception: {self._message}"
 
-    def __init__(self, delay: float = 1, sleep_delay: float = 1):
-        self.task_queue = []
-        self.queue_lock = asyncio.Lock()
+    def __init__(self, delay: float = 1, sleep_delay: float = 1, max_size: int = 10):
         self.delay = delay
         self.sleep_delay = sleep_delay
+        self.max_size = max_size
+
+        self.task_queue = []
+        self.queue_lock = asyncio.Lock()
         self.state = TaskQueue.RUNNING
         self.run_loop = None
+        self.max_size_call = lambda : ...
+
+    def set_max_size_call(self, call):
+        self.max_size_call = call
 
     async def join(self):
         self.state = TaskQueue.WAIT_TO_DIE
         if self.run_loop:
             await self.run_loop
 
-    async def post(self, call, *args, **kwargs) -> Promise:
+    async def post(self, task: PackagedTask) -> Promise:
         if self.state != TaskQueue.RUNNING:
             raise TaskQueue.QueueException("attempt to post a call in the stopped queue.")
         async with self.queue_lock:
-            self.task_queue.append(
-                TaskQueue.PackagedTask(call, args, kwargs))
+            if len(self.task_queue) > self.max_size:
+                self.max_size_call()
+                return
+            self.task_queue.append(task)
         return self.task_queue[-1].promise
 
     def stop(self):
@@ -119,29 +133,29 @@ class TaskQueue:
         self.state = TaskQueue.FORCE_DIE
 
     def run(self) -> Coroutine:
+        # self.run_loop = asyncio.Task(self._run())
         self.run_loop = asyncio.gather(self._run())
         return self.run_loop
 
-    async def _check_queue(self):
+    def _check_queue(self):
         if self.task_queue:
             return True
         if self.state == TaskQueue.WAIT_TO_DIE:
             # task queue is empty, so TaskQueue can stop now
             self.state == TaskQueue.FORCE_DIE # TODO: ???
             return False
-        await asyncio.sleep(self.sleep_delay)
-        return True
+        return False
 
     async def _run(self):
         while self.state != TaskQueue.FORCE_DIE:
+            task = None
             async with self.queue_lock:
-                if not await self._check_queue():
-                    return
-                task = self.task_queue.pop(0)
+                if self._check_queue():
+                    task = self.task_queue.pop(0)
 
-            if asyncio.iscoroutinefunction(task.call):
-                task.promise.put(await task.call(*task.args, **task.kwargs))
-            else:
-                task.promise.put(task.call(*task.args, **task.kwargs))
+            if task is None:
+                await asyncio.sleep(self.sleep_delay)
+                continue
 
+            task.promise.put(await task.call())
             await asyncio.sleep(self.delay)

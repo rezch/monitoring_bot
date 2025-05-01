@@ -49,7 +49,7 @@ def send_stat(reply_messages: Message | List[Message], resource_type: str):
         return callback
     except ZeroDivisionError as e:
         logging.error(f"ERR: {e}")
-        return force_reply_to(
+        return reply_to(
             "Sorry, something went wrong...",
             reply_messages)
 
