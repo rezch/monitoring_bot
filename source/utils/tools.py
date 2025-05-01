@@ -12,13 +12,8 @@ def flatten(data: list) -> Generator:
         return
 
     for element in data:
-        if is_pure_iterable(element):
-            yield from flatten(element)
-        else:
-            yield element
+        yield from flatten(element)
 
 
-def optional_none(value_type, nullable_value: Any):
-    if nullable_value is None:
-        return value_type() # base value of type nullable_value
-    return nullable_value
+def optional_none(nullable_value: Any, default: Any):
+    return default if nullable_value is None else nullable_value

@@ -127,7 +127,7 @@ class TaskQueue:
             return True
         if self.state == TaskQueue.WAIT_TO_DIE:
             # task queue is empty, so TaskQueue can stop now
-            self.state == TaskQueue.FORCE_DIE
+            self.state == TaskQueue.FORCE_DIE # TODO: ???
             return False
         await asyncio.sleep(self.sleep_delay)
         return True
