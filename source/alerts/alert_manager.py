@@ -45,6 +45,7 @@ def get_logger():
 
 
 class AlertManager:
+    # TODO: extract sleep time from .env cfg
     SLEEP_TIME = 1 # secs
 
     def __init__(self):
