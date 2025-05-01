@@ -1,6 +1,6 @@
 from telegram import *
 from .structs import SystemInfo, AlertGroups
-from .utils import coro_send_stat, get_callback
+from .utils import callback_post_wrapper, coro_send_stat, get_callback
 
 from datetime import datetime, timedelta
 
@@ -77,14 +77,14 @@ class ConnectionAlertHandler(AlertHandler):
         super().__init__(name, groups, chech_delay)
         self.raised = False
         self.callback_messages = []
+        self.reply_to = callback_post_wrapper(reply_to)
 
     async def check(self, info: SystemInfo) -> None:
         if self.raised and info.connected:
             self.raised = False
-            # TODO: make coro
-            # await reply_to(
-            #     f"🟢 FIXED: connection restored",
-            #     self.callback_messages)
+            await self.reply_to(
+                f"🟢 FIXED: connection restored",
+                self.callback_messages)
 
         if self.delayed() or info.connected:
             return False
