@@ -45,24 +45,19 @@ def get_logger():
 
 
 class AlertManager:
-    # TODO: extract sleep time from .env cfg
-    SLEEP_TIME = 1 # secs
-
     def __init__(self):
         self.handlers = []
         self.logger = get_logger()
+        self.delay = None
 
     def add_alert(self, handler: AlertHandler) -> None:
         self.handlers.append(handler)
 
-    @staticmethod
-    def get_remaining_sleeptime(elapsed_time):
-        return max(
-            timedelta(seconds=AlertManager.SLEEP_TIME) - elapsed_time,
-            timedelta()
-        ).total_seconds()
+    def get_remaining_sleeptime(self, elapsed_time):
+        return max(self.delay - elapsed_time, timedelta()).total_seconds()
 
     async def run(self):
+        assert self.delay is not None, "Alert config is not loaded."
         while True:
             start_time = datetime.now()
             info = await prepare_sys_info()
@@ -76,8 +71,9 @@ class AlertManager:
                 info)
 
             elapsed_time = datetime.now() - start_time
-            await asyncio.sleep(AlertManager.get_remaining_sleeptime(elapsed_time))
+            await asyncio.sleep(self.get_remaining_sleeptime(elapsed_time))
 
     def load_config(self) -> None:
-        for handler in load_config():
-            self.handlers.append(handler)
+        config = load_config()
+        self.handlers += config.handlers
+        self.delay = config.check_delay

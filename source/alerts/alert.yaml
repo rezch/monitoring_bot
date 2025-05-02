@@ -1,19 +1,22 @@
 monitorings:
+  check-delay: 0 0 1
+
+  alerts:
   - alert:
       name: "alert (all)"
       groups: all
       cpu-max-usage: 60
       mem-max-usage: 60
-      check-delay: 0 10 0
+      delay: 0 10 0
 
   - alert:
       name: "mem usage alert"
       groups: channel
       cpu-max-usage: 1
       mem-max-usage: 1
-      check-delay: 0 0 5
+      delay: 0 0 10
 
   - alert:
       groups: all
       connection: proxy
-      check-delay: 0 0 2
+      delay: 0 0 10
