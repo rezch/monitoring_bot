@@ -13,7 +13,7 @@ bot = None
 messages_queue = TaskQueue(
     delay=3, # min delay for telegram api
     sleep_delay=0.1,
-    max_size=1)
+    max_size=10)
 
 
 if TELEGRAM_API_TOKEN:
@@ -61,11 +61,7 @@ from .handlers.notify import (
     report,
     report_to_admins,
     reply_to,
-)
-
-
-from .handlers.requests import (
-    send_stat,
+    send_stat
 )
 
 

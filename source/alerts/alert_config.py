@@ -1,12 +1,20 @@
-from alerts.handlers import \
-    AlertGroups, CpuAlertHandler, MemAlertHandler, ConnectionAlertHandler
+from .handlers import \
+    AlertHandler, CpuAlertHandler, MemAlertHandler, ConnectionAlertHandler
+from .structs import AlertGroups
 
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Generator
+from typing import Generator, List
 import yaml
 
 
-def prepare_check_delay(check_delay: str) -> timedelta:
+@dataclass
+class Config:
+    handlers: List[AlertHandler]
+    check_delay: timedelta
+
+
+def prepare_delay(check_delay: str) -> timedelta:
     try:
         check_delay = list(map(int, check_delay.split(' ')))
     except:
@@ -31,7 +39,7 @@ def validate_max_usage(max_usage: float) -> float:
 def load_handler(config) -> Generator:
     name = config['alert'].get('name', None)
     groups = AlertGroups[config['alert'].get('groups', 'ALL').upper()]
-    check_delay = prepare_check_delay(config['alert'].get('check-delay', '0 10 0'))
+    check_delay = prepare_delay(config['alert'].get('check-delay', '0 10 0'))
 
     if 'cpu-max-usage' in config['alert'].keys():
         yield CpuAlertHandler(
@@ -53,10 +61,14 @@ def load_handler(config) -> Generator:
     return []
 
 
-def load_config() -> Generator:
+def load_config() -> Config:
     with open("source/alerts/alert.yaml", "r") as file:
-        config = yaml.safe_load(file)
+        raw_config = yaml.safe_load(file)
 
-    if 'monitorings' in config.keys():
-        for handler in config['monitorings']:
-            yield from load_handler(handler)
+    config = Config([], timedelta())
+    if 'monitorings' in raw_config.keys():
+        config.check_delay = prepare_delay(raw_config['monitorings']['check-delay'])
+        for state in raw_config['monitorings']['alerts']:
+            config.handlers += [handler for handler in load_handler(state)]
+
+    return config

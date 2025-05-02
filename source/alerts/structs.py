@@ -8,7 +8,7 @@ from enum import Enum
 class SystemInfo:
     cpu_usage: int      # %
     mem_usage: int      # %
-    connected: bool     # is there a connection to the proxy
+    connected: bool     # connection status
 
 
 class AlertGroups(Enum):
@@ -22,8 +22,14 @@ class PackagedMessage(TaskQueue.PackagedTask):
         """ kwargs are unsupported """
         super().__init__(call, args)
 
-    async def call(self):
+    @staticmethod
+    async def fetch_args(args):
         unpacked_args = []
-        async for arg in fetch_promise(self._args, direct_order=True):
+        async for arg in fetch_promise(args, direct_order=True):
             unpacked_args.append(arg)
-        return self._call(*unpacked_args)
+        return unpacked_args
+
+    async def call(self) -> None:
+        self.promise.put(
+            self._call(
+                *await PackagedMessage.fetch_args(self._args)))
