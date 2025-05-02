@@ -87,3 +87,12 @@ def prepare_stat_image(period: timedelta, resource: Stat) -> str:
     resource.make_plot(sys_info, filename)
 
     return filename
+
+
+def from_string(resource_type: str) -> Stat:
+    if resource_type == 'cpu':
+        return CpuStat
+    elif resource_type == 'mem':
+        return MemStat
+    elif resource_type == 'net':
+        return NetStat
